@@ -1,6 +1,7 @@
 import { Component } from 'react';
+import { PropTypes } from 'prop-types';
 import css from './ImageGallery.module.css';
-import getImages from 'api/PixabayApiService';
+import { PER_PAGE, getImages } from 'api/PixabayApiService';
 import ImageGalleryItem from 'components/ImageGalleryItem/ImageGalleryItem';
 import Button from 'components/Button/Button';
 import Loader from 'components/Loader/Loader';
@@ -9,7 +10,8 @@ class ImageGallery extends Component {
   state = {
     images: [],
     page: 1,
-    showBtn: true,
+    showBtn: false,
+    showLoader: false,
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -19,6 +21,7 @@ class ImageGallery extends Component {
     ) {
       this.resetState();
       this.createGallery();
+      return;
     }
 
     if (
@@ -26,21 +29,40 @@ class ImageGallery extends Component {
       prevState.page !== this.state.page
     ) {
       this.createGallery();
+      return;
     }
   }
 
   createGallery = async () => {
-    this.toggleBtn();
+    this.toggleLoader();
+    this.setState({ showBtn: false });
+
     try {
       const newImages = await getImages(
         this.props.searchQuery,
         this.state.page
       );
-      this.setState(({ images }) => ({ images: [...images, ...newImages] }));
+
+      const totalPages = this.getTotalPages(newImages.totalHits, PER_PAGE);
+
+      if (totalPages > this.state.page) {
+        this.setState({ showBtn: true });
+      }
+
+      this.setState(({ images }) => ({
+        images: [...images, ...newImages.hits],
+      }));
     } catch (error) {
       console.log(error);
     }
-    this.toggleBtn();
+
+    this.toggleLoader();
+  };
+
+  getTotalPages = (total, denominator) => {
+    const divisible = total % denominator === 0;
+    const valueToBeAdded = divisible ? 0 : 1;
+    return Math.floor(total / denominator) + valueToBeAdded;
   };
 
   updatePage = () => {
@@ -49,8 +71,8 @@ class ImageGallery extends Component {
 
   resetState = () => this.setState({ images: [], page: 1 });
 
-  toggleBtn = () => {
-    this.setState(({ showBtn }) => ({ showBtn: !showBtn }));
+  toggleLoader = () => {
+    this.setState(({ showLoader }) => ({ showLoader: !showLoader }));
   };
 
   render() {
@@ -58,22 +80,29 @@ class ImageGallery extends Component {
       this.state.images.length !== 0 && (
         <>
           <ul className={css.gallery}>
-            {this.state.images.map(({ id, tags, webformatURL }) => {
-              return (
-                <ImageGalleryItem
-                  key={id}
-                  tags={tags}
-                  imageUrl={webformatURL}
-                />
-              );
-            })}
+            {this.state.images.map(
+              ({ id, tags, webformatURL, largeImageURL }) => {
+                return (
+                  <ImageGalleryItem
+                    key={id}
+                    tags={tags}
+                    imageUrl={webformatURL}
+                    largeImageURL={largeImageURL}
+                  />
+                );
+              }
+            )}
           </ul>
           {this.state.showBtn && <Button onClick={this.updatePage} />}
-          {this.state.showBtn !== true && <Loader />}
+          {this.state.showLoader && <Loader />}
         </>
       )
     );
   }
 }
+
+ImageGallery.propTypes = {
+  searchQuery: PropTypes.string.isRequired,
+};
 
 export default ImageGallery;

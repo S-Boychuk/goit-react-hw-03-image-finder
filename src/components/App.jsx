@@ -1,12 +1,11 @@
 import { Component } from 'react';
-import Searchbar from './Searchbar/Searchbar';
+import SearchBar from './Searchbar/Searchbar';
 import css from './App.module.css';
 import ImageGallery from './ImageGallery/ImageGallery';
-// import Modal from './Modal/Modal';
 
 export class App extends Component {
   state = {
-    searchQuery: null,
+    searchQuery: '',
   };
 
   getSearchQuery = searchQuery => this.setState({ searchQuery });
@@ -14,7 +13,7 @@ export class App extends Component {
   render() {
     return (
       <div className={css.app}>
-        <Searchbar getSearchQuery={this.getSearchQuery}></Searchbar>
+        <SearchBar getSearchQuery={this.getSearchQuery}></SearchBar>
         <ImageGallery searchQuery={this.state.searchQuery}></ImageGallery>
       </div>
     );

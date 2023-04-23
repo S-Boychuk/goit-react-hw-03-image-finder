@@ -1,8 +1,9 @@
 import { Component } from 'react';
 import { BsSearchHeartFill } from 'react-icons/bs';
+import { PropTypes } from 'prop-types';
 import css from './Searchbar.module.css';
 
-class Searchbar extends Component {
+class SearchBar extends Component {
   state = {
     value: '',
   };
@@ -40,4 +41,8 @@ class Searchbar extends Component {
   }
 }
 
-export default Searchbar;
+SearchBar.propTypes = {
+  getSearchQuery: PropTypes.func.isRequired,
+};
+
+export default SearchBar;
